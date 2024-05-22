@@ -15,16 +15,18 @@ const (
 )
 
 var testQueries *Queries
+var testDB *pgx.Conn
 
 func TestMain(m *testing.M) {
+	var err error
 	ctx := context.Background()
-	db, err := pgx.Connect(ctx, dbSource)
+	testDB, err = pgx.Connect(ctx, dbSource)
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}
-	defer db.Close(ctx)
-
-	testQueries = New(db)
+	defer testDB.Close(ctx)
+	
+	testQueries = New(testDB)
 
 	os.Exit(m.Run())
 
