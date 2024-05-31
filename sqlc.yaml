@@ -17,6 +17,7 @@ sql:
       emit_interface: false
       emit_empty_slices: true
       emit_exact_table_names: false
+      emit_methods_with_db_argument: true
       overrides:
         - db_type: "timestamptz"
           go_type: "time.Time"
