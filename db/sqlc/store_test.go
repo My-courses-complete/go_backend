@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,10 +13,13 @@ func TestTransferTx(t *testing.T) {
 	
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t)
-	
+
+	fmt.Println("Saldos iniciales", account1.Balance, account2.Balance)
+
 	n := 5
 	amount := int64(10)
 
+	existed := make(map[int]bool)
 	for i := 0; i < n; i++ {
 		result, err := store.TransferTx(context.Background(), TransferTxParams{
 			FromAccountID: account1.ID,
@@ -23,6 +27,7 @@ func TestTransferTx(t *testing.T) {
 			Amount:        amount,
 		})
 		require.NoError(t, err)
+
 		require.NotEmpty(t, result)
 		
 		transfer := result.Transfer
@@ -55,5 +60,37 @@ func TestTransferTx(t *testing.T) {
 
 		_, err = store.GetEntry(context.Background(), toEntry.ID)
 		require.NoError(t, err)
+
+		// check accounts
+		fromAccount := result.From
+		require.NotEmpty(t, fromAccount)
+		require.Equal(t, account1.ID, fromAccount.ID)
+
+		toAccount := result.To
+		require.NotEmpty(t, toAccount)
+		require.Equal(t, account2.ID, toAccount.ID)
+
+		// checks accounts balances
+		diff1 := account1.Balance - fromAccount.Balance
+		diff2 := toAccount.Balance - account2.Balance
+		require.Equal(t, diff1, diff2)
+
+		k := int(diff1 / amount)
+		require.True(t, k >= 1 && k <= n)
+		require.NotContains(t, existed, k)
+		existed[k] = true
+
+		fmt.Println("Saldos en iteracion", fromAccount.Balance, toAccount.Balance)
 	}
+
+	updateAccount1, err := store.GetAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+
+	updateAccount2, err := store.GetAccount(context.Background(), account2.ID)
+	require.NoError(t, err)
+
+	fmt.Println("Saldos finales", updateAccount1.Balance, updateAccount2.Balance)
+
+	require.Equal(t, account1.Balance-(int64(n)*amount), updateAccount1.Balance)
+	require.Equal(t, account2.Balance+(int64(n)*amount), updateAccount2.Balance)
 }
