@@ -11,7 +11,21 @@ on:
 
 jobs:
 
-  build:
+  test:
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: go_course_bank
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -20,6 +34,9 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.22'
+
+    - name: Run Migration
+      run: make migrate
 
     - name: Test
       run: make test
