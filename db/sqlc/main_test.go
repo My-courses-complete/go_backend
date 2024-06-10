@@ -6,12 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/My-courses-complete/go_backend.git/util"
 	"github.com/jackc/pgx/v5/pgxpool"
-)
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://postgres:password@localhost:5432/go_course_bank?sslmode=disable"
 )
 
 var testQueries *Queries
@@ -19,8 +15,12 @@ var testDB *pgxpool.Pool
 
 func TestMain(m *testing.M) {
 	var err error
+	config, err := util.LoadConfig("../..")
+	if err!= nil {
+        log.Fatalf("cannot load config: %v", err)
+    }
 	ctx := context.Background()
-	testDB, err = pgxpool.New(ctx, dbSource)
+	testDB, err = pgxpool.New(ctx, config.DBSource)
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}

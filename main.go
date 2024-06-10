@@ -5,25 +5,24 @@ import (
 	"log"
 
 	"github.com/My-courses-complete/go_backend.git/api"
+	"github.com/My-courses-complete/go_backend.git/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://postgres:password@localhost:5432/go_course_bank?sslmode=disable"
-	serverAddr = "0.0.0.0:8080"
-)
-
 func main() {
+	config, err := util.LoadConfig(".")
+	if err!= nil {
+        log.Fatalf("cannot load config: %v", err)
+    }
 	ctx := context.Background()
-	conn, err := pgxpool.New(ctx, dbSource)
+	conn, err := pgxpool.New(ctx, config.DBSource)
 	if err != nil {
 		log.Fatalf("cannot connect to db: %v", err)
 	}
 
 	server := api.NewServer(conn)
 
-	err = server.Run(serverAddr)
+	err = server.Run(config.ServerAddress)
 	if err!= nil {
 		log.Fatalf("cannot run server: %v", err)
 	}
